@@ -1,0 +1,208 @@
+import json
+import datetime as dt
+import urllib.request
+import urllib.parse
+
+""" Constant Declarations """
+MAX_ID_LIST_COUNT = 5000
+MAX_DETAILED_LIST_COUNT = 200
+MAX_IDS_PER_REQUEST = 100
+
+""" API Constant Declarations """
+URL = "https://userstream.twitter.com/1.1/"
+FRIENDS_IDS = "friends/ids.json"
+FOLLOWERS_IDS = "followers/ids.json"
+FRIENDSHIPS_OUTGOING = "friendships/outgoing.json"
+STATUSES_USER_TIMELINE = "statuses/user_timeline.json"
+USERS_LOOKUP = "users/lookup.json"
+
+""" Object Declarations """
+
+class User:
+    def __init__(self, user_id):
+        # available values from REST API
+        self.name = None
+        self.profile_image_url = None
+        self.follow_request_sent = None
+        self.user_id = user_id
+        self.favourites_count = None
+        self.profile_image_url = None
+        self.lang = None
+        self.followers_count = None
+        self.protected = None
+        self.notifications = None
+        self.verified = None
+        self.geo_enabled = None
+        self.time_zone = None
+        self.description = None
+        self.default_profile_image = None
+        self.statuses_count = None
+        self.friends_count = None
+        self.following = None
+        self.screen_name = None
+        
+        # generated values
+        self.followers = None
+        self.friends = None
+        self.latest_tweet = None
+        self.tweets = None
+        self.favourites = None
+        
+    def download_followers(self):
+        self.followers = _get_id_list_helper(self, FOLLOWERS_IDS, user_id = self.user_id, count = MAX_ID_LIST_COUNT, stringify_ids = True)
+        self.followers_count = len(self.followers)
+        
+    def download_friends(self):
+        self.friends = _get_id_list_helper(self, FOLLOWERS_IDS, user_id = self.user_id, count = MAX_ID_LIST_COUNT, stringify_ids = True)
+        self.friends_count = len(self.friends)
+    
+    def download_timeline(self, n_tweets = 200):
+        if n_tweets > MAX_DETAILED_LIST_COUNT:
+            # throw an exception or a warning
+            n_tweets = 200
+        options = {user_id : self.user_id,
+                   count : n_this_request,
+                   trim_user : True,
+                   include_rts : True,
+                   next_cursor : next_cursor}
+            
+        info = __send_get_request__(URL, STATUSES_USER_TIMELINE, options)
+        
+        # extract tweets from information
+    
+    def download_favourite_tweets(self):
+        pass
+    
+class AuthenticatingUser(User):
+    def __init__(self, user_id):
+        self.pending_friendships = None
+        User.__init__(self, user_id)
+    
+    def download_pending_friendships(self):
+        self.pending_friendships = _get_id_list_helper(self, FRIENDSHIPS_OUTGOING, stringify_ids = True)
+    
+class Tweet:
+    pass
+
+""" Modular Function Declaration """
+
+def download_bulk_user_info(dict_of_users):
+    list_of_ids = _list_of_keys(dict_of_users)
+        proper_length_lists = _seperate_lists(list_of_ids, MAX_IDS_PER_REQUEST)
+    
+    for l in proper_length_lists:
+        request_string = ""
+        for u in l:
+            request_string += u + ","
+        # remove the last comma
+        request_string = request_string[:len(request_string)-1]
+        
+        # send post request
+        info = _send_post_request(None)
+        
+        for u in info:
+            # extract relevant information
+""" Helper Function Declarations """   
+
+# send GET request
+# input: the api url, the api command file, a dictionary mapping the options
+# returns JSON doc
+def __send_get_request__(url, command, options):
+    options_str = urllib.parse.urlencode(options)
+    # alter boolean values to accomodate Twitter API
+    options_str.replace('True', 'true').replace('False','false')
+    request = url + command + "?" + urllib.parse.urlencode(options)
+    
+    result = urllib.request.urlopen(url)
+    return result
+
+def _create_dict( **args ):
+    empty_vals = []
+    for key in args:
+        if args[key] is None:
+            empty_vals.append(key)
+    for arg in empty_vals:
+        del args[key]
+    del empty_vals
+    return args
+
+def _list_of_keys(dictionary):
+    l = []
+    for key in dictionary:
+        l.append(key)
+    return l
+
+# helper function to collect all possible information and exhaust the cursors
+# returns a list
+def _get_all_information(url, function, options, info_location):
+    info = []
+    next_cursor = -1
+    
+    while next_cursor:
+        doc = json.load(__send_get_request__(URL, function, options))
+        for item in doc[info_location]:
+            info.append(item)
+            
+        next_cursor = doc["next_cursor"]
+        options["cursor"] = doc["next_cursor_str"]
+            
+    return info
+
+def _get_id_list_helper(function, user_id = None, screen_name = None, cursor = None, stringify_ids = None, count = None):
+    # compile list of options supplied to function
+    options = _create_dict(user_id = user_id, 
+                           screen_name = screen_name,
+                           cursor = cursor,
+                           stringify_ids = stringify_ids,
+                           count = count)
+    
+    # if stringify_ids is True, then extract information from ids_str
+    location = None
+    if stringify_ids:
+        location = "ids_str"
+    else:
+        location = "ids"
+        
+    return _get_all_information(URL, function, options, location)
+
+def _seperate_lists(list_of_info, max_list_size):
+    collection_of_lists = []
+    
+    current_list = []
+    for item in list_of_info:
+        # add item to the current list
+        current_list.append(item)
+        # if the current list has reached max size, then store it and start a new list
+        if len(current_list) == max_list_size:
+            collection_of_lists.append(current_list)
+            current_list = []
+            print("next list")
+            
+            
+    return collection_of_lists
+
+
+
+
+""" Main Program 
+
+# login user
+my_user = User("id here")
+
+# download friends and followers
+my_user.download_friends()
+my_user.download_followers()
+
+friends = user.get_friends()
+followers = user.get_followers()
+
+non_mutual = []
+
+for user_id in friends:
+    if user_id not in followers:
+        non_mutual.append(user_id)
+
+possible_deletions = {}
+for user_id in non_mutual:
+    possible_deletions[user_id] = User(user_id) """
+    

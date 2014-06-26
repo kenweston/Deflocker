@@ -1,0 +1,6 @@
+Deflocker
+------------------------
+A work-in-progress program that analyzes a twitter user's friend list and suggests who should be unfollowed.
+
+Written in Python 3.4.
+By R. Ken Weston
