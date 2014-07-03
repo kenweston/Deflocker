@@ -2,6 +2,7 @@ import json
 import datetime as dt
 import urllib.request
 import urllib.parse
+import rauth
 
 """ Constant Declarations """
 MAX_ID_LIST_COUNT = 5000
@@ -40,6 +41,7 @@ class User:
         self.friends_count = None
         self.following = None
         self.screen_name = None
+        self.status = None
         
         # generated values
         self.followers = None
@@ -82,13 +84,21 @@ class AuthenticatingUser(User):
         self.pending_friendships = _get_id_list_helper(self, FRIENDSHIPS_OUTGOING, stringify_ids = True)
     
 class Tweet:
-    pass
+    def __init__(self, tweet_id):
+        self.tweet_id = tweet_id
+        self.created_at = None
+        self.in_reply_to_user_id = None
+        self.text = None
+        self.in_reply_to_status_id = None
+        self.retweet_count = None
+        self.retweeted = None
+        self.in_reply_to_screen_name = None
 
 """ Modular Function Declaration """
 
 def download_bulk_user_info(dict_of_users):
     list_of_ids = _list_of_keys(dict_of_users)
-        proper_length_lists = _seperate_lists(list_of_ids, MAX_IDS_PER_REQUEST)
+    proper_length_lists = _seperate_lists(list_of_ids, MAX_IDS_PER_REQUEST)
     
     for l in proper_length_lists:
         request_string = ""
@@ -98,10 +108,42 @@ def download_bulk_user_info(dict_of_users):
         request_string = request_string[:len(request_string)-1]
         
         # send post request
-        info = _send_post_request(None)
+        doc = _send_post_request(None)
         
-        for u in info:
+        for entry in doc:
+            user = dict_of_users[entry["id_str"]]
             # extract relevant information
+            user.name = entry["name"]
+            user.profile_image_url = entry["profile_image_url"]
+            user.follow_request_sent = entry["follow_request_sent"]
+            user.favourites_count = entry["favourites_count"]
+            user.profile_image_url = entry["profile_image_url"]
+            user.lang = entry["lang"]
+            user.followers_count = entry["followers_count"]
+            user.protected = entry["protected"]
+            user.notifications = entry["notifications"]
+            user.verified = entry["verified"]
+            user.geo_enabled = entry["geo_enabled"]
+            user.time_zone = entry["time_zone"]
+            user.description = entry["description"]
+            user.default_profile_image = entry["default_profile_image"]
+            user.statuses_count = entry["statuses_count"]
+            user.friends_count = entry["friends_count"]
+            user.following = entry["following"]
+            user.screen_name = entry["screen_name"]
+            
+            # construct user's last tweet
+            status = Tweet(entry["status"]["id_str"])
+            status.created_at = None
+            status.in_reply_to_user_id = entry["status"]["in_reply_to_user_id_str"]
+            status.text = entry["status"]["text"]
+            status.in_reply_to_status_id = entry["status"]["in_reply_to_status_id_str"]
+            status.retweet_count = entry["status"]["retweet_count"]
+            status.retweeted = entry["status"]["retweeted"]
+            status.in_reply_to_screen_name = entry["status"]["in_reply_to_screen_name"]
+            
+            user.status = status
+            
 """ Helper Function Declarations """   
 
 # send GET request
@@ -114,6 +156,13 @@ def __send_get_request__(url, command, options):
     request = url + command + "?" + urllib.parse.urlencode(options)
     
     result = urllib.request.urlopen(url)
+    return result
+
+def _send_post_request(url, command, data):
+    data_str = urllib.parse(urlencode(options))
+    data_str.replace('True', 'true').replace('False','false')   
+    
+    result = urllib.request.urlopen(url + command, data = data_str)
     return result
 
 def _create_dict( **args ):
