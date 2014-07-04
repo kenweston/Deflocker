@@ -2,7 +2,9 @@ import json
 import datetime as dt
 import urllib.request
 import urllib.parse
-import rauth
+
+from threading import Timer
+from rauth import OAuth1Service as oauth
 
 """ Constant Declarations """
 MAX_ID_LIST_COUNT = 5000
