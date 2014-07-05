@@ -6,6 +6,10 @@ import urllib.parse
 from threading import Timer
 from rauth import OAuth1Service as oauth
 
+from Deflocker.TwObj import User
+from Deflocker.TwObj import AuthenticatingUser
+from Deflocker.TwObj import Tweet
+
 """ Constant Declarations """
 MAX_ID_LIST_COUNT = 5000
 MAX_DETAILED_LIST_COUNT = 200
