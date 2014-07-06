@@ -1,5 +1,4 @@
 from threading import Timer
-from rauth import OAuth1Service as oauth
 
 # Robert Kenneth Weston
 # Twitter Object declarations

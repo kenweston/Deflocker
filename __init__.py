@@ -22,85 +22,40 @@ FOLLOWERS_IDS = "followers/ids.json"
 FRIENDSHIPS_OUTGOING = "friendships/outgoing.json"
 STATUSES_USER_TIMELINE = "statuses/user_timeline.json"
 USERS_LOOKUP = "users/lookup.json"
+        
+def download_followers(user):
+    user.followers = _get_id_list_helper(self, FOLLOWERS_IDS, user_id = user.user_id, count = MAX_ID_LIST_COUNT, stringify_ids = True)
+    user.followers_count = len(self.followers)
+        
+def download_friends(user):
+    user.friends = _get_id_list_helper(self, FOLLOWERS_IDS, user_id = user.user_id, count = MAX_ID_LIST_COUNT, stringify_ids = True)
+    user.friends_count = len(self.friends)
+    
+def download_timeline(user, n_tweets = 200):
+    if n_tweets > MAX_DETAILED_LIST_COUNT:
+        # throw an exception or a warning
+        n_tweets = 200
+    options = {user_id : user.user_id,
+               count : n_this_request,
+               trim_user : True,
+               include_rts : True,
+               next_cursor : next_cursor}
+        
+    info = __send_get_request__(URL, STATUSES_USER_TIMELINE, options)
+        
+    # extract tweets from information
+    
+def download_favourite_tweets(user):
+    pass
 
-""" Object Declarations """
+def login(username, password):
+    return AuthenticatingUser(username, password)
 
-class User:
-    def __init__(self, user_id):
-        # available values from REST API
-        self.name = None
-        self.profile_image_url = None
-        self.follow_request_sent = None
-        self.user_id = user_id
-        self.favourites_count = None
-        self.profile_image_url = None
-        self.lang = None
-        self.followers_count = None
-        self.protected = None
-        self.notifications = None
-        self.verified = None
-        self.geo_enabled = None
-        self.time_zone = None
-        self.description = None
-        self.default_profile_image = None
-        self.statuses_count = None
-        self.friends_count = None
-        self.following = None
-        self.screen_name = None
-        self.status = None
-        
-        # generated values
-        self.followers = None
-        self.friends = None
-        self.latest_tweet = None
-        self.tweets = None
-        self.favourites = None
-        
-    def download_followers(self):
-        self.followers = _get_id_list_helper(self, FOLLOWERS_IDS, user_id = self.user_id, count = MAX_ID_LIST_COUNT, stringify_ids = True)
-        self.followers_count = len(self.followers)
-        
-    def download_friends(self):
-        self.friends = _get_id_list_helper(self, FOLLOWERS_IDS, user_id = self.user_id, count = MAX_ID_LIST_COUNT, stringify_ids = True)
-        self.friends_count = len(self.friends)
-    
-    def download_timeline(self, n_tweets = 200):
-        if n_tweets > MAX_DETAILED_LIST_COUNT:
-            # throw an exception or a warning
-            n_tweets = 200
-        options = {user_id : self.user_id,
-                   count : n_this_request,
-                   trim_user : True,
-                   include_rts : True,
-                   next_cursor : next_cursor}
-            
-        info = __send_get_request__(URL, STATUSES_USER_TIMELINE, options)
-        
-        # extract tweets from information
-    
-    def download_favourite_tweets(self):
-        pass
-    
-class AuthenticatingUser(User):
-    def __init__(self, user_id):
-        self.pending_friendships = None
-        User.__init__(self, user_id)
-    
-    def download_pending_friendships(self):
-        self.pending_friendships = _get_id_list_helper(self, FRIENDSHIPS_OUTGOING, stringify_ids = True)
-    
-class Tweet:
-    def __init__(self, tweet_id):
-        self.tweet_id = tweet_id
-        self.created_at = None
-        self.in_reply_to_user_id = None
-        self.text = None
-        self.in_reply_to_status_id = None
-        self.retweet_count = None
-        self.retweeted = None
-        self.in_reply_to_screen_name = None
-
-""" Modular Function Declaration """
+def download_pending_friendships(authenticating_user):
+    if type(authenticating_user) is not Deflocker.TwObj.AuthenticatingUser:
+        return None
+    else:
+        authenticating_user.pending_friendships = _get_id_list_helper(self, FRIENDSHIPS_OUTGOING, stringify_ids = True)
 
 def download_bulk_user_info(dict_of_users):
     list_of_ids = _list_of_keys(dict_of_users)
