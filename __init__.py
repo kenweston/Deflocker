@@ -3,7 +3,6 @@ import datetime as dt
 import urllib.request
 import urllib.parse
 
-from threading import Timer
 from rauth import OAuth1Service as oauth
 
 from Deflocker.TwObj import User
@@ -24,10 +23,18 @@ STATUSES_USER_TIMELINE = "statuses/user_timeline.json"
 USERS_LOOKUP = "users/lookup.json"
         
 def download_followers(user):
+    if type(user) is builtins.str:
+        user = User(user)
+    if type(user) is not Deflocker.TwObj.User:
+        raise TypeError
     user.followers = _get_id_list_helper(self, FOLLOWERS_IDS, user_id = user.user_id, count = MAX_ID_LIST_COUNT, stringify_ids = True)
     user.followers_count = len(self.followers)
         
 def download_friends(user):
+    if type(user) is builtins.str:
+        user = User(user)
+    elif type(user) is not Deflocker.TwObj.User:
+        raise TypeError
     user.friends = _get_id_list_helper(self, FOLLOWERS_IDS, user_id = user.user_id, count = MAX_ID_LIST_COUNT, stringify_ids = True)
     user.friends_count = len(self.friends)
     
@@ -42,8 +49,6 @@ def download_timeline(user, n_tweets = 200):
                next_cursor : next_cursor}
         
     info = __send_get_request__(URL, STATUSES_USER_TIMELINE, options)
-        
-    # extract tweets from information
     
 def download_favourite_tweets(user):
     pass
@@ -107,25 +112,6 @@ def download_bulk_user_info(dict_of_users):
             
 """ Helper Function Declarations """   
 
-# send GET request
-# input: the api url, the api command file, a dictionary mapping the options
-# returns JSON doc
-def __send_get_request__(url, command, options):
-    options_str = urllib.parse.urlencode(options)
-    # alter boolean values to accomodate Twitter API
-    options_str.replace('True', 'true').replace('False','false')
-    request = url + command + "?" + urllib.parse.urlencode(options)
-    
-    result = urllib.request.urlopen(url)
-    return result
-
-def _send_post_request(url, command, data):
-    data_str = urllib.parse(urlencode(options))
-    data_str.replace('True', 'true').replace('False','false')   
-    
-    result = urllib.request.urlopen(url + command, data = data_str)
-    return result
-
 def _create_dict( **args ):
     empty_vals = []
     for key in args:
@@ -187,7 +173,6 @@ def _seperate_lists(list_of_info, max_list_size):
             collection_of_lists.append(current_list)
             current_list = []
             print("next list")
-            
             
     return collection_of_lists
 
