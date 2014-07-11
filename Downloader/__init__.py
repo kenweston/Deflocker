@@ -14,6 +14,30 @@ FRIENDSHIPS_OUTGOING = "friendships/outgoing.json"
 STATUSES_USER_TIMELINE = "statuses/user_timeline.json"
 USERS_LOOKUP = "users/lookup.json"
 
+def start_oauth_service():
+    consumer_key = input()
+    consumer_secret = input()
+    
+    service = oauth(consumer_key=consumer_key,
+                  consumer_secret=consumer_secret,
+                  name='twitter',
+                  access_token_url='https://api.twitter.com/oauth/access_token',
+                  request_token_url='https://api.twitter.com/oauth/request_token',
+                  base_url='https://api.twitter.com/1/')
+    
+    return service
+
+
+def send_oauth_verifier(service):
+    request_token, request_token_secret = service.get_request_token()
+    # print url
+    print("https://api.twitter.com/oauth/authorize?oauth_token=" + request_token)
+    pin=input()
+    request_token, request_token_secret = service.get_request_token()
+    data={'oauth_verifier':pin, 'oauth_token':request_token}
+    data = bytes(urllib.parse.urlencode(data), 'ascii')
+    return urllib.request.urlopen('https://api.twitter.com/oauth/access_token',data=data)
+'''
 class DownloadRequest:
     def __init__(self, requesting_object, requesting_function, url, command, options = None, data = None):
         # construct Request
@@ -39,4 +63,4 @@ class DownloadRequest:
         
     def execute_search(self, requesting_object, requesting_function, request):
         result = urllib.request.urlopen(request)
-        requesting_function(requesting_object, result)
+        requesting_function(requesting_object, result)'''
